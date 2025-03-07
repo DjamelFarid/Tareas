@@ -1,0 +1,17 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.tarea {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.tarea input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.tarea button {
+    margin-left: 5px;
+}
