@@ -1,32 +1,27 @@
-import { TodoItem } from "/dist/todoItem.js";
-import { TodoCollection } from "/dist/todoCollection.js";
+import { TodoItem } from "./todoItem.js";
+import { TodoCollection } from "./todoCollection.js";
 
-let todos = [
+// Inicialización de la colección de tareas
+const todos = [
     new TodoItem(1, "Buy Flowers"),
     new TodoItem(2, "Get Shoes"),
     new TodoItem(3, "Collect Tickets"),
     new TodoItem(4, "Call Joe", true)
 ];
 
-let collection = new TodoCollection("Usuario", todos);
+const collection = new TodoCollection("Usuario", todos);
 
-document.getElementById("btn-agregar").addEventListener("click", () => {
-    const input = document.getElementById("nueva-tarea");
-    if (input.value.trim() !== "") {
-        collection.addTodo(input.value);
-        mostrarTareas();
-        input.value = "";
-    }
-});
-
-document.getElementById("btn-eliminar").addEventListener("click", () => {
-    collection.removeComplete();
-    mostrarTareas();
-});
-
+// Función para mostrar las tareas en la interfaz
 function mostrarTareas() {
     const listaTareas = document.getElementById("lista-tareas");
+    // Limpia el contenido actual de la lista
     listaTareas.innerHTML = "";
+    
+    // Actualiza el título mostrando el número de tareas pendientes
+    const titulo = document.getElementById("titulo");
+    titulo.textContent = `${collection.userName}'s Todo List (${collection.getItemCounts().incomplete} items to do)`;
+
+    // Itera sobre todas las tareas (true indica que incluya las completadas)
     collection.getTodoItems(true).forEach(item => {
         const li = document.createElement("li");
         li.classList.add("tarea");
@@ -40,31 +35,58 @@ function mostrarTareas() {
         });
 
         const span = document.createElement("span");
-        span.textContent = item.task;
+        span.textContent = `${item.id}\t${item.task}`;
+        // Aplica tachado visual si la tarea está completada
+        if (item.complete) span.style.textDecoration = "line-through";
 
         const btnEditar = document.createElement("button");
         btnEditar.textContent = "Editar";
-        btnEditar.addEventListener("click", () => {
-            const nuevoTexto = prompt("Editar tarea:", item.task);
-            if (nuevoTexto) {
-                collection.getTodoById(item.id).task = nuevoTexto;
-                mostrarTareas();
-            }
-        });
+        btnEditar.addEventListener("click", () => editarTarea(item));
 
         const btnEliminar = document.createElement("button");
         btnEliminar.textContent = "Eliminar";
-        btnEliminar.addEventListener("click", () => {
-            collection.itemMap.delete(item.id);
-            mostrarTareas();
-        });
+        btnEliminar.addEventListener("click", () => eliminarTarea(item.id));
 
-        li.appendChild(checkbox);
-        li.appendChild(span);
-        li.appendChild(btnEditar);
-        li.appendChild(btnEliminar);
+        // Agrega todos los elementos al li en orden
+        li.append(checkbox, span, btnEditar, btnEliminar);
         listaTareas.appendChild(li);
     });
 }
 
-mostrarTareas();
+// Funciones auxiliares
+function editarTarea(item) {
+    const nuevoTexto = prompt("Editar tarea:", item.task);
+    // El operador ?. verifica si nuevoTexto existe antes de llamar a trim()
+    // Esto evita errores si el usuario cancela el prompt (devuelve null)
+    if (nuevoTexto?.trim()) {
+        collection.getTodoById(item.id).task = nuevoTexto;
+        mostrarTareas();
+    }
+}
+
+function eliminarTarea(id) {
+    collection.itemMap.delete(id);
+    mostrarTareas();
+}
+
+// Event Listeners para los botones principales
+document.getElementById("btn-agregar").addEventListener("click", () => {
+    const input = document.getElementById("nueva-tarea");
+    // trim() elimina espacios en blanco al inicio y final del texto
+    const valor = input.value.trim();
+    
+    // Verifica que el valor no esté vacío después de eliminar espacios
+    if (valor !== "") {
+        collection.addTodo(valor);
+        input.value = "";
+        mostrarTareas();
+    }
+});
+
+document.getElementById("btn-eliminar").addEventListener("click", () => {
+    collection.removeComplete();
+    mostrarTareas();
+});
+
+// Asegura que el DOM esté completamente cargado antes de mostrar las tareas
+document.addEventListener("DOMContentLoaded", mostrarTareas);
